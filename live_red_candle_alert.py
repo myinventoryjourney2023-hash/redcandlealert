@@ -106,12 +106,18 @@ def run_bot():
                     prev=df.iloc[-3]
                     if last.name.date()!=now.date():
                         continue
-                    ctime=str(last.name)
+                    ctime = (
+                        last.name
+                        .tz_convert("Asia/Kolkata")
+                        .strftime("%Y-%m-%d %H:%M:%S IST")
+                    )
                     if last_alert_time.get(stock)==ctime:
                         continue
                     if last["Close"]<last["Open"] and last["Volume"]<prev["Volume"]:
-                        entry=float(last["High"])
-                        stop_loss=float(last["Low"])
+                        buffer = float(last["Close"]) * 0.0015
+
+                        entry = float(last["High"]) + buffer
+                        stop_loss = float(last["Low"]) - buffer
                         sl=entry-stop_loss
                         if sl<=0: continue
                         qty=max(1,math.floor(MAX_RISK/sl))
