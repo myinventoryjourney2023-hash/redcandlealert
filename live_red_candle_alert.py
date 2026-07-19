@@ -97,9 +97,9 @@ def run_bot():
             stocks = load_stocks()
 
             if len(stocks) == 0:
-                print("stocks.txt Empty")
-                time.sleep(60)
-                continue
+    print("stocks.txt Empty")
+    time.sleep(60)
+    continue
 
             print(f"\nScanning {len(stocks)} Stocks...")
 
