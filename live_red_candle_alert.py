@@ -226,7 +226,6 @@ if __name__ == "__main__":
 
     print("RUN BOT STARTED")
 
-    send("✅ Telegram Test Successful")
 
     Thread(target=run_bot, daemon=True).start()
 
