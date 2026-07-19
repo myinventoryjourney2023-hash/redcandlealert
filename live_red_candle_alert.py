@@ -81,13 +81,13 @@ def run_bot():
 
         try:
 
-    now = datetime.now(ZoneInfo("Asia/Kolkata"))
-    print("Current IST Time:",now.strftime("%Y-%m-%d %H:%M:%S"))
+            now = datetime.now(ZoneInfo("Asia/Kolkata"))
+            print("Current IST Time:", now.strftime("%Y-%m-%d %H:%M:%S"))
 
-# Market Time 8:00 AM - 12:30 PM
+            # Market Time 8:00 AM - 12:30 PM
 
-    if now.hour < 8 or (now.hour == 8 and now.minute < 0):
-            print("Waiting For Market Open...")
+            if now.hour < 8 or (now.hour == 8 and now.minute < 0):
+                print("Waiting For Market Open...")
                 time.sleep(60)
                 continue
 
