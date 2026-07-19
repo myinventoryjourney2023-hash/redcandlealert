@@ -82,15 +82,15 @@ def run_bot():
 
             now = datetime.now()
 
-            # Market Time 9:30 AM - 12:30 PM
+            # Market Time 8:00 AM - 12:30 PM
 
             if now.hour < 8 or (now.hour == 8 and now.minute < 00):
-                print("Waiting For Market Open...")
+            print("Waiting For Market Open...")
                 time.sleep(60)
                 continue
 
             if now.hour > 12 or (now.hour == 12 and now.minute > 30):
-                print("Market Closed")
+            print("Market Closed")
                 time.sleep(300)
                 continue
 
