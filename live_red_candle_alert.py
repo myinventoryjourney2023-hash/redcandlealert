@@ -12,15 +12,16 @@ import yfinance as yf
 
 from flask import Flask
 
+
 # ======================================================
-# FLASK APP (Render)
+# FLASK APP
 # ======================================================
 
 app = Flask(__name__)
 
 @app.route("/")
 def home():
-    return "Bot is Running Successfully"
+    return "Red Candle Alert Bot Running"
 
 
 def run_web():
@@ -43,13 +44,53 @@ def ist_now():
 # TELEGRAM
 # ======================================================
 
-BOT_TOKEN = "YOUR_BOT_TOKEN"
-CHAT_ID = "YOUR_CHAT_ID"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+CHAT_ID = os.getenv("CHAT_ID")
 
-TELEGRAM_URL = (
-    f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+TELEGRAM_URL = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+
+
+# ======================================================
+# SETTINGS
+# ======================================================
+
+TIMEFRAME = "5m"
+PERIOD = "2d"
+
+ENTRY_BUFFER = 0.0015
+SL_BUFFER = 0.0015
+
+RISK_PER_TRADE = 200
+
+SCAN_INTERVAL = 60
+
+MARKET_OPEN = (9, 15)
+MARKET_CLOSE = (15, 30)
+
+MAX_ALERT_MEMORY = 1000
+
+
+# ======================================================
+# LOGGER
+# ======================================================
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(levelname)s | %(message)s"
 )
 
+logger = logging.getLogger(__name__)
+
+
+# ======================================================
+# MEMORY
+# ======================================================
+
+sent_alerts = {}
+
+# ======================================================
+# TELEGRAM
+# ======================================================
 
 def send_telegram(message):
 
@@ -66,6 +107,8 @@ def send_telegram(message):
 
         response.raise_for_status()
 
+        logger.info("Telegram Alert Sent")
+
         return True
 
     except Exception as e:
@@ -76,43 +119,6 @@ def send_telegram(message):
 
 
 # ======================================================
-# SETTINGS
-# ======================================================
-
-TIMEFRAME = "5m"
-
-PERIOD = "2d"
-
-ENTRY_BUFFER = 0.0015
-
-SL_BUFFER = 0.0015
-
-RISK_PER_TRADE = 200
-
-SCAN_INTERVAL = 60
-
-
-# ======================================================
-# LOGGER
-# ======================================================
-
-logging.basicConfig(
-
-    level=logging.INFO,
-
-    format="%(asctime)s | %(levelname)s | %(message)s"
-
-)
-
-logger = logging.getLogger(__name__)
-
-
-# ======================================================
-# MEMORY
-# ======================================================
-
-sent_alerts =
-# ======================================================
 # STOCK LOADER
 # ======================================================
 
@@ -120,24 +126,25 @@ def load_stocks(filename="stocks.txt"):
 
     try:
 
-        with open(filename, "r") as f:
+        stocks = []
 
-            stocks = []
+        with open(filename, "r") as f:
 
             for line in f:
 
                 symbol = line.strip().upper()
 
                 if symbol:
+
                     stocks.append(symbol)
 
-        logger.info(f"{len(stocks)} symbols loaded.")
+        logger.info(f"{len(stocks)} Symbols Loaded")
 
         return stocks
 
     except FileNotFoundError:
 
-        logger.error("stocks.txt not found.")
+        logger.error("stocks.txt not found")
 
         return []
 
@@ -165,55 +172,7 @@ def is_market_open():
 
     now = ist_now()
 
-    if now.weekday() >= 5:
-        return False
-
-    minutes = now.hour * 60 + now.minute
-
-    open_minutes = MARKET_OPEN[0] * 60 + MARKET_OPEN[1]
-    close_minutes = MARKET_CLOSE[0] * 60 + MARKET_CLOSE[1]
-
-    return open_minutes <= minutes <= close_minutes
-
-
-# ======================================================
-# YAHOO DOWNLOAD
-# ======================================================
-
-def download_data(symbol):
-
-    retries = 3
-
-    for attempt in range(retries):
-
-        try:
-
-            logger.info(
-                f"{symbol} : Download Attempt {attempt + 1}"
-            )
-
-            df = yf.download(
-
-                tickers=symbol,
-
-                interval=TIMEFRAME,
-
-                period=PERIOD,
-
-                progress=False,
-
-                auto_adjust=False,
-
-                prepost=False,
-
-                threads=False
-
-            )
-
-            if df is None or df.empty:
-
-                raise Exception("Empty Data")
-
+    if now.weekday() >=
 # ======================================================
 # STRATEGY
 # ======================================================
@@ -227,19 +186,28 @@ def check_signal(symbol):
 
     try:
 
+        # Need at least 3 completed candles
+        if len(df) < 3:
+
+            logger.info(f"{symbol} : Not enough candles")
+
+            return None
+
         # Last completed candle
         candle = df.iloc[-2]
 
         # Previous completed candle
         previous = df.iloc[-3]
 
-        # Candle time
+        # Candle Time
         candle_time = df.index[-2]
 
-        # Convert to IST
         if candle_time.tzinfo is not None:
+
             candle_time = candle_time.tz_convert(IST)
+
         else:
+
             candle_time = candle_time.tz_localize("UTC").tz_convert(IST)
 
         # NSE → Today's candle only
@@ -247,45 +215,41 @@ def check_signal(symbol):
 
             if candle_time.date() != ist_now().date():
 
-                logger.info(
-                    f"{symbol} : Old candle skipped"
-                )
+                logger.info(f"{symbol} : Old candle skipped")
 
                 return None
 
+        # -----------------------------
         # OHLC
+        # -----------------------------
+
         open_price = float(candle["Open"])
         high_price = float(candle["High"])
         low_price = float(candle["Low"])
         close_price = float(candle["Close"])
 
-        # Volume
         volume = int(candle["Volume"])
         previous_volume = int(previous["Volume"])
 
         # -----------------------------
         # CONDITION 1
-        # Red Candle
+        # RED CANDLE
         # -----------------------------
 
         if close_price >= open_price:
 
-            logger.info(
-                f"{symbol} : Green candle"
-            )
+            logger.info(f"{symbol} : Green Candle")
 
             return None
 
         # -----------------------------
         # CONDITION 2
-        # Lower Volume
+        # LOWER VOLUME
         # -----------------------------
 
         if volume >= previous_volume:
 
-            logger.info(
-                f"{symbol} : Volume condition failed"
-            )
+            logger.info(f"{symbol} : Volume Condition Failed")
 
             return None
 
@@ -311,14 +275,12 @@ def check_signal(symbol):
 
         if risk <= 0:
 
-            logger.info(
-                f"{symbol} : Invalid SL"
-            )
+            logger.info(f"{symbol} : Invalid Risk")
 
             return None
 
         # -----------------------------
-        # QUANTITY
+        # POSITION SIZE
         # -----------------------------
 
         qty = math.floor(
@@ -332,15 +294,9 @@ def check_signal(symbol):
         # TARGETS
         # -----------------------------
 
-        target1 = round(
-            entry + risk,
-            2
-        )
+        target1 = round(entry + risk, 2)
 
-        target2 = round(
-            entry + (2 * risk),
-            2
-        )
+        target2 = round(entry + (2 * risk), 2)
 
         return {
 
@@ -377,6 +333,7 @@ def check_signal(symbol):
         )
 
         return None
+
 # ======================================================
 # DUPLICATE ALERT
 # ======================================================
@@ -393,8 +350,7 @@ def is_duplicate(signal):
 
     sent_alerts[key] = time.time()
 
-    # Cleanup old entries
-    if len(sent_alerts) > MAX_ALERT_MEMORY:
+    while len(sent_alerts) > MAX_ALERT_MEMORY:
 
         oldest = min(
             sent_alerts,
@@ -412,7 +368,7 @@ def is_duplicate(signal):
 
 def build_message(signal):
 
-    message = (
+    return (
         "🔴 RED CANDLE ALERT\n\n"
 
         f"Stock : {signal['symbol']}\n"
@@ -429,14 +385,12 @@ def build_message(signal):
         f"Buy Above : {signal['entry']}\n"
         f"Stop Loss : {signal['sl']}\n\n"
 
-        f"Risk/Share : {signal['risk']}\n"
+        f"Risk / Share : {signal['risk']}\n"
         f"Quantity : {signal['qty']}\n\n"
 
         f"Target 1 : {signal['target1']}\n"
         f"Target 2 : {signal['target2']}"
     )
-
-    return message
 
 
 # ======================================================
@@ -445,45 +399,32 @@ def build_message(signal):
 
 def process_symbol(symbol):
 
-    logger.info(
-        f"Checking : {symbol} @ "
-        f"{ist_now().strftime('%H:%M:%S')}"
-    )
+    try:
 
-    signal = check_signal(symbol)
+        logger.info(f"Checking : {symbol}")
 
-    if signal is None:
+        signal = check_signal(symbol)
 
-        logger.info(
-            f"{symbol} : No Signal"
-        )
+        if signal is None:
+            return
 
-        return
+        if is_duplicate(signal):
 
-    if is_duplicate(signal):
+            logger.info(f"{symbol} : Duplicate Alert")
 
-        logger.info(
-            f"{symbol} : Duplicate Alert"
-        )
+            return
 
-        return
+        message = build_message(signal)
 
-    message = build_message(signal)
+        send_telegram(message)
 
-    if send_telegram(message):
+    except Exception as e:
 
-        logger.info(
-            f"{symbol} : Alert Sent"
-        )
+        logger.exception(f"{symbol} : {e}")
 
-    else:
-
-        logger.error(
-            f"{symbol} : Telegram Failed"
-        )
 
 # ======================================================
-# MAIN BOT LOOP
+# MAIN LOOP
 # ======================================================
 
 def run_bot():
@@ -495,79 +436,27 @@ def run_bot():
     stocks = load_stocks()
 
     if not stocks:
-        logger.error("No stocks found in stocks.txt")
+
+        logger.error("No Stocks Found")
+
         return
 
     while True:
 
         try:
 
-            logger.info("")
-            logger.info(f"Current IST Time : {ist_now()}")
-            logger.info("-" * 60)
-
-            # Weekend Handling
             if ist_now().weekday() >= 5:
 
-                logger.info("Weekend Detected - NSE Closed")
+                logger.info("Weekend")
 
-                # BTC-USD will continue
                 for symbol in stocks:
 
                     if is_crypto(symbol):
 
-                        try:
-                            process_symbol(symbol)
-                        except Exception as e:
-                            logger.error(f"{symbol} : {e}")
+                        process_symbol(symbol)
 
                         time.sleep(2)
 
                 time.sleep(SCAN_INTERVAL)
+
                 continue
-
-            # Normal Scan
-            for symbol in stocks:
-
-                try:
-
-                    # BTC works 24x7
-                    if is_crypto(symbol):
-
-                        process_symbol(symbol)
-
-                    # NSE only during market hours
-                    else:
-
-                        if is_market_open():
-
-                            process_symbol(symbol)
-
-                        else:
-
-                            logger.info(
-                                f"{symbol} : Market Closed"
-                            )
-
-                    # Small delay to avoid Yahoo rate limit
-                    time.sleep(2)
-
-                except Exception as e:
-
-                    logger.error(
-                        f"{symbol} : {e}"
-                    )
-
-            logger.info(
-                f"Sleeping for {SCAN_INTERVAL} seconds..."
-            )
-
-            time.sleep(SCAN_INTERVAL)
-
-        except Exception as e:
-
-            logger.exception(
-                f"Main Loop Error : {e}"
-            )
-
-            time.sleep(
