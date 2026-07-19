@@ -48,6 +48,9 @@ def run_bot():
             for stock in stocks:
                 try:
                     print("Checking :",stock)
+                    if stock.endswith(".NS"):
+                        if now.hour < 9 or (now.hour==9 and now.minute<15) or now.hour>15 or (now.hour==15 and now.minute>30):
+                            continue
                     df=yf.download(stock,period="2d",interval="5m",progress=False,auto_adjust=False)
                     if df.empty or len(df)<3:
                         continue
@@ -58,6 +61,8 @@ def run_bot():
                     ctime=last.name
                     if getattr(ctime,"tzinfo",None):
                         ctime=ctime.tz_convert("Asia/Kolkata")
+                    if stock.endswith(".NS") and ctime.date()!=now.date():
+                        continue
                     ctime=ctime.strftime("%Y-%m-%d %H:%M:%S IST")
                     if last_alert_time.get(stock)==ctime:
                         continue
