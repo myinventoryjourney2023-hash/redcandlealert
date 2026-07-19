@@ -76,18 +76,13 @@ print("=" * 50)
 # ==========================
 
 def run_bot():
-
     while True:
-
         try:
+            now = datetime.now(ZoneInfo("Asia/Kolkata"))
+            print("Current IST Time:", now.strftime("%Y-%m-%d %H:%M:%S"))
 
-    now = datetime.now(ZoneInfo("Asia/Kolkata"))
-    print("Current IST Time:",now.strftime("%Y-%m-%d %H:%M:%S"))
-
-# Market Time 8:00 AM - 12:30 PM
-
-    if now.hour < 8 or (now.hour == 8 and now.minute < 0):
-            print("Waiting For Market Open...")
+            if now.hour < 8:
+                print("Waiting For Market Open...")
                 time.sleep(60)
                 continue
 
@@ -97,133 +92,43 @@ def run_bot():
                 continue
 
             stocks = load_stocks()
-
-            if len(stocks) == 0:
-                print("stocks.txt Empty")
-                time.sleep(60)
-                continue
-
-            print(f"\nScanning {len(stocks)} Stocks...")
+            print(f"Scanning {len(stocks)} Stocks...")
 
             for stock in stocks:
-
                 try:
-
-                    print(f"\nChecking : {stock}")
-
-                    df = yf.download(
-                        stock,
-                        period="2d",
-                        interval="5m",
-                        progress=False,
-                        auto_adjust=False
-                    )
-
-                    if df.empty or len(df) < 3:
-                        print("No Data")
+                    print("Checking :", stock)
+                    df=yf.download(stock,period="2d",interval="5m",progress=False,auto_adjust=False)
+                    if df.empty or len(df)<3:
                         continue
-
-                    if hasattr(df.columns, "nlevels"):
-                        if df.columns.nlevels > 1:
-                            df.columns = df.columns.get_level_values(0)
-
-                    last = df.iloc[-2]
-                    prev = df.iloc[-3]
-
-                    candle_time = str(last.name)
-
-                    # Skip old candles (previous trading day)
-                    if last.name.date() != now.date():
-                        print("Old candle - Skipping")
+                    if hasattr(df.columns,"nlevels") and df.columns.nlevels>1:
+                        df.columns=df.columns.get_level_values(0)
+                    last=df.iloc[-2]
+                    prev=df.iloc[-3]
+                    if last.name.date()!=now.date():
                         continue
-
-                    if last_alert_time.get(stock) == candle_time:
-                        print("Already Alert Sent")
+                    ctime=str(last.name)
+                    if last_alert_time.get(stock)==ctime:
                         continue
-                                        # ==========================
-                    # RED CANDLE + LOW VOLUME
-                    # ==========================
-
-                    if (
-                        last["Close"] < last["Open"]
-                        and last["Volume"] < prev["Volume"]
-                    ):
-
-                        entry = float(last["High"])
-                        stop_loss = float(last["Low"])
-
-                        sl_size = entry - stop_loss
-
-                        if sl_size <= 0:
-                            print("Invalid SL")
-                            continue
-
-                        qty = math.floor(MAX_RISK / sl_size)
-
-                        if qty <= 0:
-                            qty = 1
-
-                        target1 = entry + sl_size
-                        target2 = entry + (2 * sl_size)
-
-                        message = (
-                            f"🔴 RED CANDLE ALERT\n\n"
-                            f"Stock : {stock}\n"
-                            f"Time : {candle_time}\n\n"
-                            f"Open : {last['Open']:.2f}\n"
-                            f"High : {last['High']:.2f}\n"
-                            f"Low : {last['Low']:.2f}\n"
-                            f"Close : {last['Close']:.2f}\n\n"
-                            f"Current Volume : {int(last['Volume'])}\n"
-                            f"Previous Volume : {int(prev['Volume'])}\n\n"
-                            f"Buy Above : {entry:.2f}\n"
-                            f"Stop Loss : {stop_loss:.2f}\n"
-                            f"SL Size : {sl_size:.2f}\n\n"
-                            f"Risk : ₹{MAX_RISK}\n"
-                            f"Quantity : {qty}\n\n"
-                            f"Target 1 : {target1:.2f}\n"
-                            f"Target 2 : {target2:.2f}"
-                        )
-
-                        print(message)
-
-                        send(message)
-
-                        last_alert_time[stock] = candle_time
-
-                    else:
-
-                        print(
-                            f"{stock} | "
-                            f"Red={last['Close'] < last['Open']} | "
-                            f"LowVolume={last['Volume'] < prev['Volume']}"
-                        )
-
+                    if last["Close"]<last["Open"] and last["Volume"]<prev["Volume"]:
+                        entry=float(last["High"])
+                        stop_loss=float(last["Low"])
+                        sl=entry-stop_loss
+                        if sl<=0: continue
+                        qty=max(1,math.floor(MAX_RISK/sl))
+                        t1=entry+sl
+                        t2=entry+2*sl
+                        msg=f"🔴 RED CANDLE ALERT\n\nStock : {stock}\nTime : {ctime}\n\nBuy Above : {entry:.2f}\nStop Loss : {stop_loss:.2f}\nQuantity : {qty}\nTarget 1 : {t1:.2f}\nTarget 2 : {t2:.2f}"
+                        print(msg)
+                        send(msg)
+                        last_alert_time[stock]=ctime
                 except Exception as e:
-
-                    print(f"{stock} Error :", e)
-                    continue
-                            # ==========================
-            # WAIT FOR NEXT 5 MIN CANDLE
-            # ==========================
-
-            now = datetime.now(ZoneInfo("Asia/Kolkata"))
-
-            wait_seconds = 300 - ((now.minute % 5) * 60 + now.second)
-
-            if wait_seconds <= 0:
-                wait_seconds = 5
-
-            print(f"\nWaiting {wait_seconds} seconds...\n")
-
-            time.sleep(wait_seconds)
-
+                    print(stock,"Error:",e)
+            wait=300-((now.minute%5)*60+now.second)
+            if wait<=0: wait=5
+            time.sleep(wait)
         except Exception as e:
-
-            print("MAIN ERROR :", e)
-
+            print("MAIN ERROR:",e)
             time.sleep(60)
-
 
 # ==========================
 # START BOT
