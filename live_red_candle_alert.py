@@ -4,6 +4,7 @@ import os
 import time
 import math
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 import yfinance as yf
 import requests
@@ -80,26 +81,26 @@ def run_bot():
 
         try:
 
-            now = datetime.now()
+            now = datetime.now(ZoneInfo("Asia/Kolkata"))
 
             # Market Time 8:00 AM - 12:30 PM
 
-            if now.hour < 8 or (now.hour == 8 and now.minute < 00):
-            print("Waiting For Market Open...")
+            if now.hour < 8 or (now.hour == 8 and now.minute < 0):
+                print("Waiting For Market Open...")
                 time.sleep(60)
                 continue
 
             if now.hour > 12 or (now.hour == 12 and now.minute > 30):
-            print("Market Closed")
+                print("Market Closed")
                 time.sleep(300)
                 continue
 
             stocks = load_stocks()
 
             if len(stocks) == 0:
-    print("stocks.txt Empty")
-    time.sleep(60)
-    continue
+                print("stocks.txt Empty")
+                time.sleep(60)
+                continue
 
             print(f"\nScanning {len(stocks)} Stocks...")
 
@@ -200,7 +201,7 @@ def run_bot():
             # WAIT FOR NEXT 5 MIN CANDLE
             # ==========================
 
-            now = datetime.now()
+            now = datetime.now(ZoneInfo("Asia/Kolkata"))
 
             wait_seconds = 300 - ((now.minute % 5) * 60 + now.second)
 
