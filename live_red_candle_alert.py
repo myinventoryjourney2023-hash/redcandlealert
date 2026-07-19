@@ -89,7 +89,7 @@ def run_bot():
                 time.sleep(60)
                 continue
 
-            if now.hour > 03 or (now.hour == 03 and now.minute > 30):
+            if now.hour > 15 or (now.hour == 15 and now.minute > 30):
                 print("Market Closed")
                 time.sleep(300)
                 continue
