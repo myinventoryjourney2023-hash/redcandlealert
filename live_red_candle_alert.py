@@ -26,7 +26,7 @@ def run_web():
 # TELEGRAM
 # ==========================
 
-BOT_TOKEN = "8780999788:AAHQXATRD8OWFKenIhjq97Gk3Q4QpTyGh9U"
+BOT_TOKEN = "8848402982:AAEWKzGbzpbEhVIfIL4qwdXK5uFrRNfxJOY"
 CHAT_ID = "952222198"
 
 # ==========================
