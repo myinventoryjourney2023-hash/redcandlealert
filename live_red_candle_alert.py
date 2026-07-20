@@ -110,23 +110,37 @@ def run_bot():
 
                 try:
 
-                    print(f"\nChecking : {stock}")
+                    print("\nDownloading Market Data...")
 
-                    df = yf.download(
-                        stock,
-                        period="2d",
-                        interval="5m",
-                        progress=False,
-                        auto_adjust=False
-                    )
+all_data = yf.download(
+    tickers=stocks,
+    period="2d",
+    interval="5m",
+    group_by="ticker",
+    threads=True,
+    progress=False,
+    auto_adjust=False
+)
 
-                    if df.empty or len(df) < 3:
-                        print("No Data")
-                        continue
+for stock in stocks:
 
-                    if hasattr(df.columns, "nlevels"):
-                        if df.columns.nlevels > 1:
-                            df.columns = df.columns.get_level_values(0)
+    try:
+
+        print(f"\nChecking : {stock}")
+
+        if stock not in all_data:
+            print("No Data")
+            continue
+
+        df = all_data[stock].dropna()
+
+        if df.empty or len(df) < 3:
+            print("No Data")
+            continue
+
+        # आपका बाकी का कोड यहीं से जैसा है वैसा ही रहेगा...
+        last = df.iloc[-2]
+        prev = df.iloc[-3]
 
                     last = df.iloc[-2]
                     prev = df.iloc[-3]
