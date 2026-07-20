@@ -1,4 +1,4 @@
-Punjab National Bank.NS
-Oil India.NS
-Torrent Pharma.NS
-Canara Bank.NS
+PNB.NS
+OIL.NS
+TORNTPHARM.NS
+CANBK.NS
