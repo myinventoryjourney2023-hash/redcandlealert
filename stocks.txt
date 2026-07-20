@@ -1,4 +1,4 @@
-RELIANCE.NS
-TCS.NS
-LT.NS
-BTC-USD
+Punjab National Bank.NS
+Oil India.NS
+Torrent Pharma.NS
+Canara Bank.NS
