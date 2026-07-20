@@ -4,6 +4,9 @@ import os
 import time
 import math
 from datetime import datetime
+from zoneinfo import ZoneInfo
+
+IST = ZoneInfo("Asia/Kolkata")
 
 import yfinance as yf
 import requests
@@ -80,7 +83,7 @@ def run_bot():
 
         try:
 
-            now = datetime.now()
+            now = datetime.now(IST)
 
             # Market Time 9:20 AM - 03:30 PM
 
