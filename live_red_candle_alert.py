@@ -27,6 +27,7 @@ MARKET_CLOSE = (15, 30)
 # ==========================
 
 def market_is_open():
+     return True
 
     now = datetime.now()
 
@@ -52,22 +53,15 @@ print("=" * 60)
 
 while True:
 
-   if not market_is_open():
+    if not market_is_open():
 
-    print("Market Closed - Running Historical Test")
+        print(
+            f"[{datetime.now().strftime('%H:%M:%S')}] "
+            "Market Closed..."
+        )
 
-    results, elapsed = scan_market()
-
-    report = prepare_scan_results(
-        results,
-        elapsed
-    )
-
-    run_long_engine(report)
-
-    break
-        
-            
+        time.sleep(60)
+        continue
 
     print("\n")
     print("=" * 60)
