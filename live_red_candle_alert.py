@@ -1,3 +1,4 @@
+import traceback
 import time
 from datetime import datetime
 
@@ -102,13 +103,11 @@ while True:
         print("\nBot Stopped By User")
         break
 
-    except Exception as e:
+    except Exception:
 
         print("\n==============================")
         print("BOT ERROR")
         print("==============================")
-        print(type(e).__name__)
-        print(e)
-
-    print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
-    time.sleep(SCAN_INTERVAL)
+        traceback.print_exc()
+        print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
+        time.sleep(SCAN_INTERVAL)
