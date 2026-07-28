@@ -105,10 +105,10 @@ while True:
 
     except Exception:
 
-    print("\n==============================")
-    print("BOT ERROR")
-    print("==============================")
-    traceback.print_exc()
+        print("\n==============================")
+        print("BOT ERROR")
+        print("==============================")
+        traceback.print_exc()
 
 print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
 time.sleep(SCAN_INTERVAL)
