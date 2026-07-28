@@ -59,7 +59,6 @@ while True:
         )
 
         time.sleep(60)
-
         continue
 
     print("\n")
@@ -78,7 +77,8 @@ while True:
         )
 
         breadth = get_market_breadth(results)
-                print("\n========== MARKET ==========")
+
+        print("\n========== MARKET ==========")
         print(f"Advances : {breadth['advances']}")
         print(f"Declines : {breadth['declines']}")
         print(f"Bullish  : {breadth['bullish']}")
@@ -111,6 +111,4 @@ while True:
         print(e)
 
     print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
-
     time.sleep(SCAN_INTERVAL)
-        
