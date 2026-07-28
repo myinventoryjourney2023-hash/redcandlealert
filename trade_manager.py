@@ -117,14 +117,13 @@ def is_trade_open(symbol):
     for trade in trades:
 
         if (
-            trade["symbol"] == symbol
-            and trade["status"] == "OPEN"
+            trade.get("symbol") == symbol
+            and trade.get("status") == "OPEN"
         ):
 
             return True
 
     return False
-
 
 # ===================================
 # Generate Trade ID
