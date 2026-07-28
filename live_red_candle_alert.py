@@ -110,5 +110,5 @@ while True:
         print("==============================")
         traceback.print_exc()
 
-print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
-time.sleep(SCAN_INTERVAL)
+    print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
+    time.sleep(SCAN_INTERVAL)
