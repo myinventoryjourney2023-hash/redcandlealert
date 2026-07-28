@@ -52,12 +52,20 @@ print("=" * 60)
 
 while True:
 
-    if not market_is_open():
+   if not market_is_open():
 
-        print("Market Closed - Running Historical Test")
-        report = run_long_engine()
-        print(report)
-         break
+    print("Market Closed - Running Historical Test")
+
+    results, elapsed = scan_market()
+
+    report = prepare_scan_results(
+        results,
+        elapsed
+    )
+
+    run_long_engine(report)
+
+    break
         
             
 
