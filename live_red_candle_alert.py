@@ -92,13 +92,14 @@ while True:
 
         print("\nBot Stopped By User")
         break
-
-    except Exception:
+    except Exception as e:
 
         print("\n==============================")
         print("BOT ERROR")
         print("==============================")
+        print("ERROR =", e)
         traceback.print_exc()
+    
 
     print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
     time.sleep(SCAN_INTERVAL)
