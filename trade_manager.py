@@ -51,7 +51,6 @@ COLUMNS = [
 # ===================================
 
 def now():
-
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
 
@@ -59,7 +58,9 @@ def create_empty_csv(filename):
 
     if not os.path.exists(filename):
 
-        pd.DataFrame(columns=COLUMNS).to_csv(
+        df = pd.DataFrame(columns=COLUMNS)
+
+        df.to_csv(
             filename,
             index=False
         )
@@ -77,12 +78,34 @@ def load_active_trades():
 
     create_empty_csv(ACTIVE_TRADES_FILE)
 
-    df = pd.read_csv(ACTIVE_TRADES_FILE)
+    try:
+
+        df = pd.read_csv(ACTIVE_TRADES_FILE)
+
+    except Exception:
+
+        create_empty_csv(ACTIVE_TRADES_FILE)
+
+        return []
 
     if df.empty:
         return []
 
-    return df.to_dict("records")
+    records = df.to_dict("records")
+
+    cleaned = []
+
+    for trade in records:
+
+        row = {}
+
+        for col in COLUMNS:
+
+            row[col] = trade.get(col, None)
+
+        cleaned.append(row)
+
+    return cleaned
 
 
 # ===================================
@@ -120,10 +143,10 @@ def is_trade_open(symbol):
             trade.get("symbol") == symbol
             and trade.get("status") == "OPEN"
         ):
-
             return True
 
     return False
+
 
 # ===================================
 # Generate Trade ID
@@ -132,7 +155,7 @@ def is_trade_open(symbol):
 def generate_trade_id():
 
     return uuid.uuid4().hex[:12]
-# ===================================
+    # ===================================
 # Create Trade
 # ===================================
 
@@ -140,49 +163,76 @@ def create_trade(trade):
 
     trades = load_active_trades()
 
-    # Duplicate protection
+    # -------------------------------
+    # Validation
+    # -------------------------------
+
+    if not isinstance(trade, dict):
+        return None
+
+    symbol = trade.get("symbol")
+
+    if not symbol:
+        print("Trade rejected : Symbol Missing")
+        return None
+
+    # -------------------------------
+    # Duplicate Protection
+    # -------------------------------
+
     for t in trades:
 
         if (
-            t["symbol"] == trade["symbol"]
-            and t["status"] == "OPEN"
+            t.get("symbol") == symbol
+            and t.get("status") == "OPEN"
         ):
-
+            print(f"Trade already active : {symbol}")
             return None
 
     current_time = now()
 
-    trade["trade_id"] = generate_trade_id()
+    new_trade = {}
 
-    trade["status"] = "OPEN"
+    # Create all columns first
+    for col in COLUMNS:
+        new_trade[col] = None
 
-    trade["entry_triggered"] = True
+    # Copy incoming values safely
+    for key, value in trade.items():
+        new_trade[key] = value
 
-    trade["target1_hit"] = False
-    trade["target2_hit"] = False
+    # Required fields
+    new_trade["trade_id"] = generate_trade_id()
+    new_trade["symbol"] = symbol
+    new_trade["status"] = "OPEN"
 
-    trade["target1_alert_sent"] = False
-    trade["target2_alert_sent"] = False
+    new_trade["entry_triggered"] = True
 
-    trade["entry_price"] = trade["entry"]
-    trade["exit_price"] = None
+    new_trade["target1_hit"] = False
+    new_trade["target2_hit"] = False
 
-    trade["entry_time"] = current_time
-    trade["exit_time"] = None
+    new_trade["target1_alert_sent"] = False
+    new_trade["target2_alert_sent"] = False
 
-    trade["exit_reason"] = None
+    new_trade["entry_price"] = trade.get("entry")
+    new_trade["exit_price"] = None
 
-    trade["created_time"] = current_time
-    trade["updated_time"] = current_time
+    new_trade["entry_time"] = current_time
+    new_trade["exit_time"] = None
 
-    trades.append(trade)
+    new_trade["exit_reason"] = None
+
+    new_trade["created_time"] = current_time
+    new_trade["updated_time"] = current_time
+
+    trades.append(new_trade)
 
     save_active_trades(trades)
 
-    return trade["trade_id"]
+    print(f"Trade Saved : {symbol}")
 
-
-# ===================================
+    return new_trade["trade_id"]
+    # ===================================
 # Update Trade
 # ===================================
 
@@ -195,8 +245,8 @@ def update_trade(symbol, **kwargs):
     for trade in trades:
 
         if (
-            trade["symbol"] == symbol
-            and trade["status"] == "OPEN"
+            trade.get("symbol") == symbol
+            and trade.get("status") == "OPEN"
         ):
 
             for key, value in kwargs.items():
@@ -226,19 +276,25 @@ def close_trade(symbol, exit_price, reason):
 
     history = []
 
-    if os.path.exists(TRADE_HISTORY_FILE):
+    create_empty_csv(TRADE_HISTORY_FILE)
+
+    try:
 
         history = pd.read_csv(
             TRADE_HISTORY_FILE
         ).to_dict("records")
+
+    except Exception:
+
+        history = []
 
     active = []
 
     for trade in trades:
 
         if (
-            trade["symbol"] == symbol
-            and trade["status"] == "OPEN"
+            trade.get("symbol") == symbol
+            and trade.get("status") == "OPEN"
         ):
 
             trade["status"] = "CLOSED"
@@ -271,3 +327,4 @@ def close_trade(symbol, exit_price, reason):
     )
 
     return True
+    
