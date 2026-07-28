@@ -29,18 +29,7 @@ MARKET_CLOSE = (15, 30)
 def market_is_open():
      return True
 
-    now = datetime.now()
-
-    # Saturday / Sunday
-    if now.weekday() >= 5:
-        return False
-
-    current = now.hour * 60 + now.minute
-
-    start = MARKET_OPEN[0] * 60 + MARKET_OPEN[1]
-    end = MARKET_CLOSE[0] * 60 + MARKET_CLOSE[1]
-
-    return start <= current <= end
+   
 
 
 # ==========================
