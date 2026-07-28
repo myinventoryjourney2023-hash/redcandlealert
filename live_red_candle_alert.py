@@ -54,13 +54,12 @@ while True:
 
     if not market_is_open():
 
-        print(
-            f"[{datetime.now().strftime('%H:%M:%S')}] "
-            "Market Closed..."
-        )
-
-        time.sleep(60)
-        continue
+        print("Market Closed - Running Historical Test")
+        report = run_long_engine()
+        print(report)
+         break
+        
+            
 
     print("\n")
     print("=" * 60)
