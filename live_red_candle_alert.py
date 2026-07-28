@@ -27,9 +27,19 @@ MARKET_CLOSE = (15, 30)
 # ==========================
 
 def market_is_open():
-     return True
 
-   
+    now = datetime.now()
+
+    # Saturday / Sunday
+    if now.weekday() >= 5:
+        return False
+
+    current = now.hour * 60 + now.minute
+
+    start = MARKET_OPEN[0] * 60 + MARKET_OPEN[1]
+    end = MARKET_CLOSE[0] * 60 + MARKET_CLOSE[1]
+
+    return start <= current <= end
 
 
 # ==========================
@@ -92,14 +102,13 @@ while True:
 
         print("\nBot Stopped By User")
         break
-    except Exception as e:
+
+    except Exception:
 
         print("\n==============================")
         print("BOT ERROR")
         print("==============================")
-        print("ERROR =", e)
         traceback.print_exc()
-    
 
     print(f"\nSleeping {SCAN_INTERVAL} Seconds...")
     time.sleep(SCAN_INTERVAL)
