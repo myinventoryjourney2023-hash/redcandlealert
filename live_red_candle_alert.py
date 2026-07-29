@@ -286,6 +286,7 @@ def start_bot():
             print("=" * 50)
             print("NEW TRADING DAY")
             print("Triggered List Reset")
+            send_telegram("✅ Render Bot Started Successfully")
             print("=" * 50)
             print()
 
