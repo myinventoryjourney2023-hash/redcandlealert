@@ -3,3 +3,8 @@ TCS
 INFY
 COFORGE
 DLF
+NALCO
+Tata Steel
+Cipla
+Kalyan Jewellers
+L&T
