@@ -1,0 +1,27 @@
+services:
+  - type: worker
+    name: inside-strategy-bot
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: TIMEFRAME
+        value: 5m
+      - key: PERIOD
+        value: 2d
+      - key: RISK_AMOUNT
+        value: "50"
+      - key: BUY_BUFFER_PCT
+        value: "0.02"
+      - key: SL_BUFFER_PCT
+        value: "0.02"
+      - key: MAX_TRADES_PER_DAY
+        value: "3"
+      - key: POLL_SECONDS
+        value: "10"
+      - key: PAPER_MODE
+        value: "true"
+      - key: BOT_TOKEN
+        sync: false
+      - key: CHAT_ID
+        sync: false

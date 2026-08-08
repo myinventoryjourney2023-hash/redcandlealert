@@ -1,0 +1,7 @@
+Write a complete TradingView Pine Script v6 Strategy.
+
+Return ONLY Pine Script.
+
+No markdown.
+
+No explanation.
