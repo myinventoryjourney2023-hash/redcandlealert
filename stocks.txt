@@ -1,4 +1,2 @@
-# One NSE symbol per line
-# You can edit this file without changing bot.py
 RELIANCE.NS
 TCS.NS
